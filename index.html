@@ -271,6 +271,61 @@
   }
   .study-progress span { color: var(--ink); }
 
+  .study-right {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .shuffle-group {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .mode-btn {
+    appearance: none;
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--ink-3);
+    padding: 6px 10px;
+    border-radius: 2px;
+    cursor: pointer;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s ease;
+  }
+  .mode-btn:hover {
+    border-color: var(--ink);
+    color: var(--ink);
+  }
+  .mode-btn.active {
+    background: var(--burgundy);
+    border-color: var(--burgundy);
+    color: var(--paper);
+  }
+  .mode-btn svg { width: 12px; height: 12px; }
+  .shuffle-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--burgundy);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin-left: 2px;
+  }
+
+  @media (max-width: 600px) {
+    .study-head {
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .study-right { width: 100%; justify-content: space-between; }
+    .mode-btn { padding: 5px 8px; }
+  }
+
   .word-meta {
     display: flex;
     align-items: center;
@@ -642,7 +697,22 @@
       <button class="back-btn" id="backBtn">
         ← Themen
       </button>
-      <div class="study-progress" id="studyProgress"></div>
+      <div class="study-right">
+        <div class="shuffle-group">
+          <button class="mode-btn" id="shuffleBtn" title="Shuffle this topic (key: S)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="16 3 21 3 21 8"></polyline>
+              <line x1="4" y1="20" x2="21" y2="3"></line>
+              <polyline points="21 16 21 21 16 21"></polyline>
+              <line x1="15" y1="15" x2="21" y2="21"></line>
+              <line x1="4" y1="4" x2="9" y2="9"></line>
+            </svg>
+            <span>Shuffle</span>
+          </button>
+          <button class="mode-btn hidden" id="sequentialBtn" title="Original order">A→Z</button>
+        </div>
+        <div class="study-progress" id="studyProgress"></div>
+      </div>
     </div>
 
     <div id="studyContent"></div>
@@ -661,7 +731,7 @@
   </div>
 
   <div class="foot">
-    <kbd>Space</kbd> reveal / next  ·  <kbd>←</kbd> <kbd>→</kbd> navigate  ·  <kbd>R</kbd> replay  ·  <kbd>A</kbd> audio
+    <kbd>Space</kbd> reveal / next  ·  <kbd>←</kbd> <kbd>→</kbd> navigate  ·  <kbd>R</kbd> replay  ·  <kbd>S</kbd> shuffle  ·  <kbd>A</kbd> audio
   </div>
 
 </div>
@@ -683,6 +753,8 @@ const state = {
   currentIndex: 0,      // index within current cluster's words
   position: {},         // {clusterName: lastIndex}
   maxReached: {},       // {clusterName: highest index touched}
+  shuffleOn: {},        // {clusterName: boolean}
+  shuffleOrder: {},     // {clusterName: [permutation of indices]}
   audioOn: true,
   revealed: false,
   view: 'upload',       // 'upload' | 'clusters' | 'study' | 'complete'
@@ -706,6 +778,8 @@ function loadState() {
     // safety: ensure objects exist
     state.position = state.position || {};
     state.maxReached = state.maxReached || {};
+    state.shuffleOn = state.shuffleOn || {};
+    state.shuffleOrder = state.shuffleOrder || {};
     if (typeof state.audioOn !== 'boolean') state.audioOn = true;
     return !!state.data;
   } catch (e) {
@@ -723,6 +797,8 @@ function resetAll() {
   state.currentIndex = 0;
   state.position = {};
   state.maxReached = {};
+  state.shuffleOn = {};
+  state.shuffleOrder = {};
   state.revealed = false;
   state.view = 'upload';
   render();
@@ -825,6 +901,28 @@ function clusterWords(cluster) {
   return state.data.filter((r) => r.cluster === cluster);
 }
 
+function shuffleArray(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// Returns the actual word at a given logical position in the current order
+// (sequential or shuffled). Regenerates shuffle if length mismatch.
+function wordAt(cluster, logicalIndex) {
+  const words = clusterWords(cluster);
+  if (!state.shuffleOn[cluster]) return words[logicalIndex];
+  let order = state.shuffleOrder[cluster];
+  if (!order || order.length !== words.length) {
+    order = shuffleArray([...Array(words.length).keys()]);
+    state.shuffleOrder[cluster] = order;
+  }
+  return words[order[logicalIndex]];
+}
+
 function genderClass(g) {
   const norm = g.toLowerCase().trim();
   if (norm === 'der') return 'der';
@@ -907,10 +1005,19 @@ function renderStudy() {
     render();
     return;
   }
-  const w = words[state.currentIndex];
+  const w = wordAt(state.currentCluster, state.currentIndex);
+  const isShuffled = !!state.shuffleOn[state.currentCluster];
 
   document.getElementById('studyProgress').innerHTML =
-    `<span>${state.currentIndex + 1}</span> / ${total} · ${escapeHtml(state.currentCluster)}`;
+    `<span>${state.currentIndex + 1}</span> / ${total} · ${escapeHtml(state.currentCluster)}` +
+    (isShuffled ? ` <span class="shuffle-badge">· shuffled</span>` : '');
+
+  // update shuffle button states
+  const shuffleBtn = document.getElementById('shuffleBtn');
+  const sequentialBtn = document.getElementById('sequentialBtn');
+  shuffleBtn.classList.toggle('active', isShuffled);
+  shuffleBtn.querySelector('span').textContent = isShuffled ? 'Reshuffle' : 'Shuffle';
+  sequentialBtn.classList.toggle('hidden', !isShuffled);
 
   const content = document.getElementById('studyContent');
   const gClass = genderClass(w.gender);
@@ -1050,6 +1157,34 @@ function backToClusters() {
   render();
 }
 
+function doShuffle() {
+  if (!state.currentCluster) return;
+  const c = state.currentCluster;
+  const words = clusterWords(c);
+  state.shuffleOrder[c] = shuffleArray([...Array(words.length).keys()]);
+  state.shuffleOn[c] = true;
+  state.currentIndex = 0;
+  state.position[c] = 0;
+  state.revealed = false;
+  if ('speechSynthesis' in window) speechSynthesis.cancel();
+  saveState();
+  renderStudy();
+  toast('Shuffled — starting fresh');
+}
+
+function doSequential() {
+  if (!state.currentCluster) return;
+  const c = state.currentCluster;
+  state.shuffleOn[c] = false;
+  state.currentIndex = 0;
+  state.position[c] = 0;
+  state.revealed = false;
+  if ('speechSynthesis' in window) speechSynthesis.cancel();
+  saveState();
+  renderStudy();
+  toast('Original order');
+}
+
 function toggleAudio() {
   state.audioOn = !state.audioOn;
   if (!state.audioOn && 'speechSynthesis' in window) speechSynthesis.cancel();
@@ -1090,6 +1225,8 @@ function setupFileHandlers() {
   document.getElementById('audioBtn').addEventListener('click', toggleAudio);
   document.getElementById('resetBtn').addEventListener('click', resetAll);
   document.getElementById('backBtn').addEventListener('click', backToClusters);
+  document.getElementById('shuffleBtn').addEventListener('click', doShuffle);
+  document.getElementById('sequentialBtn').addEventListener('click', doSequential);
   document.getElementById('completeBackBtn').addEventListener('click', backToClusters);
   document.getElementById('completeReviewBtn').addEventListener('click', () => {
     state.currentIndex = 0;
@@ -1120,9 +1257,11 @@ function setupKeyboardShortcuts() {
         e.preventDefault();
         doPrev();
       } else if (e.key === 'r' || e.key === 'R') {
-        const words = clusterWords(state.currentCluster);
-        const w = words[state.currentIndex];
+        const w = wordAt(state.currentCluster, state.currentIndex);
         if (w) speak(`${w.word}. ${w.story}`);
+      } else if (e.key === 's' || e.key === 'S') {
+        e.preventDefault();
+        doShuffle();
       } else if (e.key === 'Escape') {
         backToClusters();
       }
