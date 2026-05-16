@@ -62,6 +62,8 @@
     padding-bottom: 22px;
     border-bottom: 1px solid var(--line);
     margin-bottom: 36px;
+    flex-wrap: wrap;
+    gap: 14px;
   }
 
   .brand {
@@ -90,6 +92,36 @@
     display: flex;
     gap: 6px;
     align-items: center;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .voice-select {
+    appearance: none;
+    -webkit-appearance: none;
+    background-color: var(--paper);
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23615B4F' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+    background-position: right 10px center;
+    background-repeat: no-repeat;
+    border: 1px solid var(--line);
+    color: var(--ink-2);
+    padding: 8px 26px 8px 12px;
+    border-radius: 18px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    max-width: 180px;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+    height: 36px;
+    transition: border-color 0.15s ease;
+  }
+  .voice-select:hover, .voice-select:focus {
+    border-color: var(--ink);
+    color: var(--ink);
+    outline: none;
   }
 
   .icon-btn {
@@ -271,27 +303,18 @@
   }
   .study-progress span { color: var(--ink); }
 
-  .study-right {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-  }
-  .shuffle-group {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-  }
   .mode-btn {
     appearance: none;
     background: transparent;
     border: 1px solid var(--line);
-    color: var(--ink-3);
-    padding: 6px 10px;
-    border-radius: 2px;
+    color: var(--ink-2);
+    padding: 0 14px;
+    height: 36px;
+    border-radius: 18px;
     cursor: pointer;
     font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 0.1em;
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
     display: inline-flex;
     align-items: center;
@@ -307,7 +330,7 @@
     border-color: var(--burgundy);
     color: var(--paper);
   }
-  .mode-btn svg { width: 12px; height: 12px; }
+  .mode-btn svg { width: 13px; height: 13px; }
   .shuffle-badge {
     font-family: 'JetBrains Mono', monospace;
     font-size: 9px;
@@ -318,12 +341,10 @@
   }
 
   @media (max-width: 600px) {
-    .study-head {
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-    .study-right { width: 100%; justify-content: space-between; }
-    .mode-btn { padding: 5px 8px; }
+    .controls { width: 100%; justify-content: flex-start; gap: 5px; }
+    .mode-btn { padding: 0 10px; height: 34px; font-size: 10px; }
+    .voice-select { font-size: 10px; max-width: 140px; height: 34px; }
+    .icon-btn { width: 34px; height: 34px; }
   }
 
   .word-meta {
@@ -651,12 +672,26 @@
       Deutsch<span class="dot">·</span>Vokabel<span class="sub">A2 Network</span>
     </div>
     <div class="controls">
-      <button class="icon-btn" id="audioBtn" title="Toggle audio (key: A)">
+      <button class="icon-btn" id="audioBtn" title="Toggle audio">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
           <path class="audio-wave" d="M15.54 8.46a5 5 0 0 1 0 7.07M19.07 4.93a10 10 0 0 1 0 14.14"></path>
         </svg>
       </button>
+      <select class="voice-select" id="voiceSelect" title="Choose voice">
+        <option value="">Auto · best voice</option>
+      </select>
+      <button class="mode-btn hidden" id="shuffleBtn" title="Shuffle this topic">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="16 3 21 3 21 8"></polyline>
+          <line x1="4" y1="20" x2="21" y2="3"></line>
+          <polyline points="21 16 21 21 16 21"></polyline>
+          <line x1="15" y1="15" x2="21" y2="21"></line>
+          <line x1="4" y1="4" x2="9" y2="9"></line>
+        </svg>
+        <span>Shuffle</span>
+      </button>
+      <button class="mode-btn hidden" id="sequentialBtn" title="Original order">A→Z</button>
       <button class="icon-btn" id="uploadBtn" title="Load different file">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -697,22 +732,7 @@
       <button class="back-btn" id="backBtn">
         ← Themen
       </button>
-      <div class="study-right">
-        <div class="shuffle-group">
-          <button class="mode-btn" id="shuffleBtn" title="Shuffle this topic (key: S)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="16 3 21 3 21 8"></polyline>
-              <line x1="4" y1="20" x2="21" y2="3"></line>
-              <polyline points="21 16 21 21 16 21"></polyline>
-              <line x1="15" y1="15" x2="21" y2="21"></line>
-              <line x1="4" y1="4" x2="9" y2="9"></line>
-            </svg>
-            <span>Shuffle</span>
-          </button>
-          <button class="mode-btn hidden" id="sequentialBtn" title="Original order">A→Z</button>
-        </div>
-        <div class="study-progress" id="studyProgress"></div>
-      </div>
+      <div class="study-progress" id="studyProgress"></div>
     </div>
 
     <div id="studyContent"></div>
@@ -756,6 +776,7 @@ const state = {
   shuffleOn: {},        // {clusterName: boolean}
   shuffleOrder: {},     // {clusterName: [permutation of indices]}
   audioOn: true,
+  selectedVoiceName: '', // empty = auto
   revealed: false,
   view: 'upload',       // 'upload' | 'clusters' | 'study' | 'complete'
 };
@@ -781,6 +802,7 @@ function loadState() {
     state.shuffleOn = state.shuffleOn || {};
     state.shuffleOrder = state.shuffleOrder || {};
     if (typeof state.audioOn !== 'boolean') state.audioOn = true;
+    if (typeof state.selectedVoiceName !== 'string') state.selectedVoiceName = '';
     return !!state.data;
   } catch (e) {
     console.warn('Storage load failed:', e);
@@ -869,18 +891,65 @@ function parseFile(file) {
 /* ──────────────────────────────────────────────
    Speech synthesis
 ─────────────────────────────────────────────── */
-let germanVoice = null;
-function pickGermanVoice() {
+function listGermanVoices() {
+  if (!('speechSynthesis' in window)) return [];
   const voices = speechSynthesis.getVoices();
-  // Prefer de-DE, then any de-*
-  germanVoice =
-    voices.find((v) => v.lang === 'de-DE') ||
-    voices.find((v) => v.lang.startsWith('de')) ||
-    null;
+  const germans = voices.filter((v) => v.lang && v.lang.toLowerCase().startsWith('de'));
+  // Prioritize: enhanced/premium/neural/siri > de-DE > others; then by name.
+  const score = (v) => {
+    let s = 0;
+    if (/enhanced|premium|neural|siri/i.test(v.name)) s += 100;
+    if (v.lang === 'de-DE') s += 10;
+    return s;
+  };
+  germans.sort((a, b) => score(b) - score(a) || a.name.localeCompare(b.name));
+  return germans;
 }
+
+function getSelectedVoice() {
+  if (!('speechSynthesis' in window)) return null;
+  const all = speechSynthesis.getVoices();
+  if (state.selectedVoiceName) {
+    const v = all.find((v) => v.name === state.selectedVoiceName);
+    if (v) return v;
+  }
+  const germans = listGermanVoices();
+  return germans[0] || null;
+}
+
+function populateVoiceSelect() {
+  const select = document.getElementById('voiceSelect');
+  if (!select) return;
+  const germans = listGermanVoices();
+  // Preserve user's choice across refreshes
+  const previous = state.selectedVoiceName;
+  // Rebuild options
+  select.innerHTML = '';
+  const auto = document.createElement('option');
+  auto.value = '';
+  const autoPick = germans[0];
+  auto.textContent = autoPick ? `Auto · ${autoPick.name}` : 'Auto · no German voice';
+  select.appendChild(auto);
+  germans.forEach((v) => {
+    const opt = document.createElement('option');
+    opt.value = v.name;
+    // Compact label: name + lang code. Keep names readable on iOS picker.
+    opt.textContent = `${v.name}  ·  ${v.lang}`;
+    select.appendChild(opt);
+  });
+  // Restore selection
+  select.value = previous || '';
+  // If the saved voice no longer exists, fall back to auto silently
+  if (previous && !germans.some((v) => v.name === previous)) {
+    select.value = '';
+    state.selectedVoiceName = '';
+    saveState();
+  }
+}
+
 if ('speechSynthesis' in window) {
-  pickGermanVoice();
-  speechSynthesis.addEventListener('voiceschanged', pickGermanVoice);
+  // Voices load asynchronously on many browsers; populate when ready and on change
+  speechSynthesis.addEventListener('voiceschanged', populateVoiceSelect);
 }
 
 function speak(text) {
@@ -888,7 +957,11 @@ function speak(text) {
   speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(text);
   u.lang = 'de-DE';
-  if (germanVoice) u.voice = germanVoice;
+  const v = getSelectedVoice();
+  if (v) {
+    u.voice = v;
+    u.lang = v.lang;
+  }
   u.rate = 0.92;
   u.pitch = 1.0;
   try { speechSynthesis.speak(u); } catch (e) { console.warn(e); }
@@ -957,10 +1030,24 @@ function render() {
   // audio button state
   const ab = document.getElementById('audioBtn');
   ab.classList.toggle('active', state.audioOn);
-  ab.title = state.audioOn ? 'Audio on (key: A)' : 'Audio off (key: A)';
+  ab.title = state.audioOn ? 'Audio on' : 'Audio off';
   // dim wave when off
   const wave = ab.querySelector('.audio-wave');
   if (wave) wave.style.opacity = state.audioOn ? '1' : '0.2';
+
+  // shuffle buttons only meaningful in study view
+  const shuffleBtn = document.getElementById('shuffleBtn');
+  const sequentialBtn = document.getElementById('sequentialBtn');
+  const inStudy = state.view === 'study' && !!state.currentCluster;
+  shuffleBtn.classList.toggle('hidden', !inStudy);
+  if (inStudy) {
+    const isShuffled = !!state.shuffleOn[state.currentCluster];
+    shuffleBtn.classList.toggle('active', isShuffled);
+    shuffleBtn.querySelector('span').textContent = isShuffled ? 'Reshuffle' : 'Shuffle';
+    sequentialBtn.classList.toggle('hidden', !isShuffled);
+  } else {
+    sequentialBtn.classList.add('hidden');
+  }
 
   if (state.view === 'clusters') renderClusters();
   if (state.view === 'study') renderStudy();
@@ -1011,13 +1098,6 @@ function renderStudy() {
   document.getElementById('studyProgress').innerHTML =
     `<span>${state.currentIndex + 1}</span> / ${total} · ${escapeHtml(state.currentCluster)}` +
     (isShuffled ? ` <span class="shuffle-badge">· shuffled</span>` : '');
-
-  // update shuffle button states
-  const shuffleBtn = document.getElementById('shuffleBtn');
-  const sequentialBtn = document.getElementById('sequentialBtn');
-  shuffleBtn.classList.toggle('active', isShuffled);
-  shuffleBtn.querySelector('span').textContent = isShuffled ? 'Reshuffle' : 'Shuffle';
-  sequentialBtn.classList.toggle('hidden', !isShuffled);
 
   const content = document.getElementById('studyContent');
   const gClass = genderClass(w.gender);
@@ -1168,7 +1248,7 @@ function doShuffle() {
   state.revealed = false;
   if ('speechSynthesis' in window) speechSynthesis.cancel();
   saveState();
-  renderStudy();
+  render();
   toast('Shuffled — starting fresh');
 }
 
@@ -1181,7 +1261,7 @@ function doSequential() {
   state.revealed = false;
   if ('speechSynthesis' in window) speechSynthesis.cancel();
   saveState();
-  renderStudy();
+  render();
   toast('Original order');
 }
 
@@ -1227,6 +1307,20 @@ function setupFileHandlers() {
   document.getElementById('backBtn').addEventListener('click', backToClusters);
   document.getElementById('shuffleBtn').addEventListener('click', doShuffle);
   document.getElementById('sequentialBtn').addEventListener('click', doSequential);
+
+  // Voice selector
+  const voiceSelect = document.getElementById('voiceSelect');
+  voiceSelect.addEventListener('change', (e) => {
+    state.selectedVoiceName = e.target.value;
+    saveState();
+    // brief preview
+    if (state.audioOn) {
+      const sample = 'Guten Tag. Wie geht es Ihnen?';
+      speak(sample);
+    }
+    const v = getSelectedVoice();
+    toast(v ? `Voice: ${v.name}` : 'No German voice available');
+  });
   document.getElementById('completeBackBtn').addEventListener('click', backToClusters);
   document.getElementById('completeReviewBtn').addEventListener('click', () => {
     state.currentIndex = 0;
@@ -1282,6 +1376,16 @@ function setupKeyboardShortcuts() {
   setupKeyboardShortcuts();
 
   const restored = loadState();
+  // Populate voice list — try now, will also re-populate on voiceschanged
+  populateVoiceSelect();
+  // Some browsers need a kick to load voices
+  if ('speechSynthesis' in window) {
+    try { speechSynthesis.getVoices(); } catch (e) {}
+    // Retry shortly in case voices arrive late on first load
+    setTimeout(populateVoiceSelect, 250);
+    setTimeout(populateVoiceSelect, 1000);
+  }
+
   if (restored && state.data && state.data.length > 0) {
     // resume where they were
     if (state.view === 'study' && state.currentCluster) {
